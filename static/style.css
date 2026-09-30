@@ -1,0 +1,157 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #d02c2c;
+}
+
+header {
+    text-align: center;
+    padding: 30px 20px;
+    background-color: #222;
+    color: white;
+}
+
+h1 {
+    margin: 0;
+}
+
+.search {
+    text-align: center;
+    margin: 30px;
+}
+
+.search input {
+    width: 300px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.search button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background-color: #222;
+    color: white;
+}
+
+.artists {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+    padding: 30px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.artist-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.artist-card a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.artist-card img {
+    width: 100%;
+    display: block;
+}
+
+.artist-card h2 {
+    padding: 10px;
+}
+
+.artist-page {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 25px;
+    text-decoration: none;
+    color: #222;
+}
+
+.artist-details {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.artist-main-image {
+    width: 350px;
+    max-width: 100%;
+    border-radius: 10px;
+}
+
+.artist-info {
+    flex: 1;
+}
+
+.artist-info h1 {
+    margin-top: 0;
+}
+
+.artist-info ul,
+.concert ul {
+    padding-left: 20px;
+}
+
+.concerts {
+    margin-top: 30px;
+}
+
+.concert {
+    background: white;
+    margin-bottom: 15px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.concert h3 {
+    margin-top: 0;
+}
+
+.error-page {
+    min-height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+}
+
+.error-box {
+    background: white;
+    text-align: center;
+    padding: 50px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    width: 100%;
+}
+
+.error-box h1 {
+    margin-top: 0;
+}
+
+.error-box p {
+    margin: 25px 0;
+}

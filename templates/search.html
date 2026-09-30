@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Search Results</title>
+</head>
+<body>
+
+    <header>
+        <h1>Search Results</h1>
+    </header>
+
+    <div class="search">
+        <form action="/search" method="GET">
+            <input type="text" name="name" placeholder="Search artist">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    {{if .}}
+
+        <div class="artists">
+
+            {{range .}}
+
+                <div class="artist-card">
+                    <a href="/artist?id={{.ID}}">
+                        <img src="{{.Image}}" alt="{{.Name}}">
+                        <h2>{{.Name}}</h2>
+                    </a>
+                </div>
+
+            {{end}}
+
+        </div>
+
+    {{else}}
+
+        <div class="search">
+            <p>No artists found.</p>
+            <a class="back-link" href="/">← Back to artists</a>
+        </div>
+
+    {{end}}
+
+</body>
+</html>
