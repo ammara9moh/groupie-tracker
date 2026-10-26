@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
+
+var client = http.Client{Timeout: 10 * time.Second}
 
 type Artist struct {
 	ID           int      `json:"id"`
@@ -72,7 +75,7 @@ func fetchRelations() ([]Relation, error) {
 }
 
 func fetchJSON(url string, target interface{}) error {
-	resp, err := http.Get(url)
+	resp, err := client.Get(url) //10 seconds is for the whole request: connecting, sending, waiting for the answer, and reading the body.
 	if err != nil {
 		return err
 	}
