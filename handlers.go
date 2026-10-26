@@ -2,16 +2,19 @@ package main
 
 import (
 	"bytes"
-	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 var artists []Artist
 var locations []Location
 var dates []Dates
 var relations []Relation
+
+// Templates are parsed once at startup and reused for every request.
+var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -32,7 +35,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	render(w, "templates/search.html", results)
+	render(w, "search.html", results)
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +49,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render(w, "templates/index.html", artists)
+	render(w, "index.html", artists)
 }
 
 func artistHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,20 +97,13 @@ func artistHandler(w http.ResponseWriter, r *http.Request) {
 		Relation: selectedRelation,
 	}
 
-	render(w, "templates/artist.html", details)
+	render(w, "artist.html", details)
 }
 
 // render builds the page in a buffer so a template failure can still return a clean 500.
-func render(w http.ResponseWriter, file string, data interface{}) {
-
-	tmpl, err := template.ParseFiles(file)
-	if err != nil {
-		renderError(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
+func render(w http.ResponseWriter, name string, data interface{}) {
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
+	if err := templates.ExecuteTemplate(&buf, name, data); err != nil {
 		renderError(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -116,12 +112,10 @@ func render(w http.ResponseWriter, file string, data interface{}) {
 	buf.WriteTo(w)
 }
 
+// renderError sends the status code first, then the error page.
 func renderError(w http.ResponseWriter, message string, status int) {
-	tmpl, err := template.ParseFiles("templates/error.html")
-
 	var buf bytes.Buffer
-	if err != nil || tmpl.Execute(&buf, message) != nil {
-		// Template unavailable: still send the correct status.
+	if err := templates.ExecuteTemplate(&buf, "error.html", message); err != nil {
 		http.Error(w, message, status)
 		return
 	}

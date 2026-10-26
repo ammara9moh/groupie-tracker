@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-var client = http.Client{Timeout: 10 * time.Second}
-
 type Artist struct {
 	ID           int      `json:"id"`
 	Image        string   `json:"image"`
@@ -49,6 +47,8 @@ type ArtistDetails struct {
 	Artist   Artist
 	Relation Relation
 }
+
+var client = http.Client{Timeout: 10 * time.Second}
 
 func fetchArtists() ([]Artist, error) {
 	var artists []Artist
