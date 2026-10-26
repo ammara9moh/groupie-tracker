@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -13,47 +14,30 @@ var dates []Dates
 var relations []Relation
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
+		renderError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	name := strings.TrimSpace(r.URL.Query().Get("name")) //used to read the search item, it reads the value of the name query parameter
-	//TrimSpace is used to remove spaces
-
+	name := strings.TrimSpace(r.URL.Query().Get("name"))
 	if name == "" {
-		http.Error(w, "Search name is required", http.StatusBadRequest)
+		renderError(w, "Search name is required", http.StatusBadRequest)
 		return
 	}
 
 	var results []Artist
-
 	for _, artist := range artists {
-		if strings.EqualFold(artist.Name, name) { //EqualFold compares strings without caring about uppercase/lowercase.
+		if strings.EqualFold(artist.Name, name) {
 			results = append(results, artist)
 		}
 	}
 
-	tmpl, err := template.ParseFiles("templates/search.html")
-
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.Execute(w, results)
-
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	render(w, "templates/search.html", results)
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
+		renderError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -62,32 +46,16 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/index.html")
-
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.Execute(w, artists)
-
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	render(w, "templates/index.html", artists)
 }
 
 func artistHandler(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
+		renderError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	idString := r.URL.Query().Get("id")
-
-	id, err := strconv.Atoi(idString)
-
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
 		renderError(w, "Invalid artist ID", http.StatusBadRequest)
 		return
@@ -95,7 +63,6 @@ func artistHandler(w http.ResponseWriter, r *http.Request) {
 
 	var selectedArtist Artist
 	foundArtist := false
-
 	for _, artist := range artists {
 		if artist.ID == id {
 			selectedArtist = artist
@@ -103,7 +70,6 @@ func artistHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
 	if !foundArtist {
 		renderError(w, "Artist not found", http.StatusNotFound)
 		return
@@ -111,7 +77,6 @@ func artistHandler(w http.ResponseWriter, r *http.Request) {
 
 	var selectedRelation Relation
 	foundRelation := false
-
 	for _, relation := range relations {
 		if relation.ID == selectedArtist.ID {
 			selectedRelation = relation
@@ -119,9 +84,8 @@ func artistHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
 	if !foundRelation {
-		renderError(w, "Artist relation not found", http.StatusNotFound)
+		renderError(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -130,36 +94,39 @@ func artistHandler(w http.ResponseWriter, r *http.Request) {
 		Relation: selectedRelation,
 	}
 
-	tmpl, err := template.ParseFiles("templates/artist.html")
+	render(w, "templates/artist.html", details)
+}
 
+// render builds the page in a buffer so a template failure can still return a clean 500.
+func render(w http.ResponseWriter, file string, data interface{}) {
+
+	tmpl, err := template.ParseFiles(file)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		renderError(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	err = tmpl.Execute(w, details)
-
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		renderError(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }
 
 func renderError(w http.ResponseWriter, message string, status int) {
-
 	tmpl, err := template.ParseFiles("templates/error.html")
 
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	var buf bytes.Buffer
+	if err != nil || tmpl.Execute(&buf, message) != nil {
+		// Template unavailable: still send the correct status.
+		http.Error(w, message, status)
 		return
 	}
 
-	err = tmpl.Execute(w, message)
-
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
+	buf.WriteTo(w)
 }

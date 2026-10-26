@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -47,69 +48,39 @@ type ArtistDetails struct {
 }
 
 func fetchArtists() ([]Artist, error) {
-
-	resp, err := http.Get("https://groupietrackers.herokuapp.com/api/artists")
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
 	var artists []Artist
-
-	err = json.NewDecoder(resp.Body).Decode(&artists)
-
+	err := fetchJSON("https://groupietrackers.herokuapp.com/api/artists", &artists)
 	return artists, err
 }
 
 func fetchLocations() ([]Location, error) {
-
-	resp, err := http.Get("https://groupietrackers.herokuapp.com/api/locations")
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
 	var response LocationResponse
-
-	err = json.NewDecoder(resp.Body).Decode(&response)
-
+	err := fetchJSON("https://groupietrackers.herokuapp.com/api/locations", &response)
 	return response.Index, err
 }
 
 func fetchDates() ([]Dates, error) {
-
-	resp, err := http.Get("https://groupietrackers.herokuapp.com/api/dates")
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
 	var response DatesResponse
-
-	err = json.NewDecoder(resp.Body).Decode(&response)
-
+	err := fetchJSON("https://groupietrackers.herokuapp.com/api/dates", &response)
 	return response.Index, err
 }
 
 func fetchRelations() ([]Relation, error) {
+	var response RelationResponse
+	err := fetchJSON("https://groupietrackers.herokuapp.com/api/relation", &response)
+	return response.Index, err
+}
 
-	resp, err := http.Get("https://groupietrackers.herokuapp.com/api/relation")
-
+func fetchJSON(url string, target interface{}) error {
+	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
 	defer resp.Body.Close()
 
-	var response RelationResponse
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("GET %s returned status %d", url, resp.StatusCode)
+	}
 
-	err = json.NewDecoder(resp.Body).Decode(&response)
-
-	return response.Index, err
+	return json.NewDecoder(resp.Body).Decode(target)
 }
