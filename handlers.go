@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"embed"
+	"io/fs"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,8 +15,19 @@ var locations []Location
 var dates []Dates
 var relations []Relation
 
-// Templates are parsed once at startup and reused for every request.
-var templates = template.Must(template.ParseGlob("templates/*.html"))
+//go:embed templates/*.html static/*
+var siteFiles embed.FS
+
+// Templates and static assets are embedded so they are included in Vercel's binary.
+var templates = template.Must(template.ParseFS(siteFiles, "templates/*.html"))
+
+func staticFiles() http.FileSystem {
+	files, err := fs.Sub(siteFiles, "static")
+	if err != nil {
+		panic(err)
+	}
+	return http.FS(files)
+}
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
